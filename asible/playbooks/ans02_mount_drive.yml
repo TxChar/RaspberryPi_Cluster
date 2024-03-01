@@ -1,0 +1,31 @@
+---
+- name: Mount drive and Connect
+  hosts: head_node
+  become: true
+
+  tasks:
+  - name: format ext4 on /dev/sda1
+    community.general.filesystem:
+      fstype: ext4
+      dev: /dev/sda1
+  - name: Create share directory
+    ansible.builtin.file:
+      path: /clusterfs
+      state: directory
+  - name: command chown
+    ansible.builtin.command: chown nobody.nogroup -R /clusterfs
+  - name: Change folder permission 777
+    ansible.builtin.command: chmod 777 -R /clusterfs
+  - name: Read uuid from drive /dev/sda1
+    ansible.builtin.command: blkid -s UUID -o value /dev/sda1
+    register: uuid
+  - name: Setting /etc/fstab
+    ansible.builtin.lineinfile:
+      path: /etc/fstab
+      line: "UUID={{ uuid.stdout }} /clusterfs ext4 defaults 0 2"
+  - name: Mount new drive
+    ansible.builtin.command: mount -a
+  - name: Change owner
+    ansible.builtin.command: chown nobody.nogroup -R /clusterfs
+  - name: Change permission
+    ansible.builtin.command: chmod -R 766 /clusterfs
