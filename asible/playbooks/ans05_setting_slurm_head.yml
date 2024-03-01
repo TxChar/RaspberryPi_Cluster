@@ -1,0 +1,53 @@
+---
+- name: Setting Slurm for Head Node
+  hosts: head_note
+  become: true
+
+  tasks:
+  - name: Setting hosts
+    ansible.builtin.lineinfile:
+      path: /etc/hosts
+      line: "10.0.1.10\tnode-front\n10.0.1.11\tnode-01\n10.0.1.12\tnode-02"
+  - name: Install Slurm
+    ansible.builtin.apt:
+      name: slurm-wlm
+      state: present
+  - name: Copy Slurm config
+    ansible.builtin.copy:
+      src: /usr/share/doc/slurm-client/examples/slurm.conf.simple.gz
+      dest: /etc/slurm
+      remote_src: true
+  - name: Extract Slurm zip file
+    ansible.builtin.command: gzip -d /etc/slurm/slurm.conf.simple.gz
+  - name: Change slurm config file’s name
+    ansible.builtin.command: mv /etc/slurm/slurm.conf.simple /etc/slurm/slurm.conf
+  - name: Setting Slurm control host
+    ansible.builtin.lineinfile:
+      path: /etc/slurm/slurm.conf
+      regexp: "^SlurmctldHost="
+      line: SlurmctldHost=node-front(10.0.1.10)
+  - name: Setting Slurm SelectType
+    ansible.builtin.lineinfile:
+      path: /etc/slurm/slurm.conf
+      regexp: "^SelectType="
+      line: SelectType=select/cons_res
+  - name: Setting slurm SelectTypeParameters
+    ansible.builtin.lineinfile:
+      path: /etc/slurm/slurm.conf
+      regexp: "^SelectTypeParameters="
+      line: SelectTypeParameters=CR_Core
+  - name: Setting cluster name
+    ansible.builtin.lineinfile:
+      path: /etc/slurm/slurm.conf
+      regexp: "^ClusterName="
+      line: ClusterName=cluster
+  - name: Setting all raspberry pi node
+    ansible.builtin.lineinfile:
+      path: /etc/slurm/slurm.conf
+      regexp: "^NodeName="
+      line: "NodeName=node-front NodeAddr=10.0.1.10 CPUs=4 ThreadsPerCore=1 weight=100 State=UNKNOWN\nNodeName=node-01 NodeAddr=10.0.1.11 CPUs=4 ThreadsPerCore=1 weight=1 State=UNKNOWN\nNodeName=node-02 NodeAddr=10.0.1.12 CPUs=4 ThreadsPerCore=1 weight=1 State=UNKNOWN"
+  - name: Setting slurm partition’s name
+    ansible.builtin.lineinfile:
+      path: /etc/slurm/slurm.conf
+      regexp: "^PartitionName="
+      line: PartitionName=mycluster Nodes=node-[01-02] Default=YES MaxTime=INFINITE State=UP\
