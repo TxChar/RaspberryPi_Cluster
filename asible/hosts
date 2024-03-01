@@ -1,0 +1,6 @@
+[head_node]
+<hostname> ansible_host=<ip_addr> ansible_port=<port>
+
+[compute_node]
+<hostname> ansible_host=<ip_addr> ansible_port=<port>
+<hostname> ansible_host=<ip_addr> ansible_port=<port>
