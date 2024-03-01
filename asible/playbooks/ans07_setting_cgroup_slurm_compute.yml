@@ -1,0 +1,42 @@
+---
+- name: Setting CGROUP and Start Service (ComputeNode)
+  hosts: compute_node
+  become: true
+
+  tasks:
+  - name: Install compute node daemon of Slurm 
+    ansible.builtin.apt:
+      name:
+        - slurmd
+        - slurm-client
+      state: present
+  - name: Setting hosts(For Compute Node)
+    ansible.builtin.lineinfile:
+      path: /etc/hosts
+      line: "10.0.1.10\tnode-front\n10.0.1.11\tnode-01\n10.0.1.12\tnode-02"
+  - name: Copy configuration files from share drive
+    ansible.builtin.copy:
+      src: "{{ item.src }}"
+      dest: "{{ item.dest }}"
+      remote_src: true
+    loop:
+      - src: /clusterfs/munge.key
+        dest: /etc/munge/munge.key
+      - src: /clusterfs/slurm.conf
+        dest: /etc/slurm/slurm.conf
+      - src: /clusterfs/cgroup_allowed_devices_file.conf
+        dest: /etc/slurm/cgroup_allowed_devices_file.conf
+      - src: /clusterfs/cgroup.conf
+        dest: /etc/slurm/cgroup.conf
+  - name: Start system services
+    ansible.builtin.command: "{{ item }}"
+    with_items:
+      - systemctl enable munge
+      - systemctl start munge
+  - name: Reboot system
+    ansible.builtin.reboot:
+  - name Start slurm daemon
+    ansible.builtin.command: "{{ item }}"
+    with_items:
+      - systemctl enable slurmd
+      - systemctl start slurmd
