@@ -1,0 +1,19 @@
+---
+- name: Sync Time
+  hosts: all
+  become: true
+  tasks:
+
+  - name: update apt
+    ansible.builtin.apt:
+      name: "*"
+      state: latest
+  - name: upgrade apt
+    ansible.builtin.apt:
+      upgrade: yes
+  - name: install ntpdate
+    ansible.builtin.apt:
+      name: ntpdate
+      state: present
+  - name: Reboot system
+    ansible.builtin.reboot:
