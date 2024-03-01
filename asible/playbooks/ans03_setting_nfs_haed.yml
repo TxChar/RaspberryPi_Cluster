@@ -1,0 +1,16 @@
+---
+- name: export nfs
+  hosts: head_node
+  become: true
+
+  tasks:
+    - name: Install nfs-kernel-server
+      ansible.builtin.apt:
+        name: nfs-kernel-server
+        state: present
+    - name: Setting /etc/exports
+      ansible.builtin.lineinfile:
+        path: /etc/exports
+        line: /clusterfs    10.0.1.0/24(rw,sync,no_root_squash,no_subtree_check)
+    - name: update nfs
+      ansible.builtin.command: exportfs -a
