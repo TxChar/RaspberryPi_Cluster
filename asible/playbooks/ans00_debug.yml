@@ -1,0 +1,7 @@
+- name: Display node's hostname
+  hosts: all
+  tasks:
+    - name: Use hostname command
+      command: "hostname"
+      register: debug
+    - debug: var=debug["stdout"]
